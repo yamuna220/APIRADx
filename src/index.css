@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+/* ── Light theme (default) ─────────────────────────────────────── */
+:root {
+  --bg:            #FFF6EA;
+  --bg-secondary:  #F8F0E2;
+  --sidebar-bg:    #F3E7D3;
+  --card:          #FFFFFF;
+  --card-hover:    #F8F0E2;
+  --card-elevated: #F0E8D8;
+  --brand:         #5A4A33;
+  --brand-hover:   #8C7554;
+  --brand-text:    #FFFFFF;
+  --accent:        #7A674C;
+  --border:        #D8C8B0;
+  --border-subtle: #EAD9C4;
+  --text-primary:  #3E3427;
+  --text-secondary:#7A6A55;
+  --text-muted:    #9A8A74;
+  --success:       #2E7D32;
+  --warning:       #D97706;
+  --error:         #B91C1C;
+  --high:          #92400E;
+  --info:          #2563EB;
+}
+
+/* ── Dark theme ────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:            #18140F;
+  --bg-secondary:  #211B14;
+  --sidebar-bg:    #211B14;
+  --card:          #2A241D;
+  --card-hover:    #342C23;
+  --card-elevated: #342C23;
+  --brand:         #D6B98C;
+  --brand-hover:   #E3C79B;
+  --brand-text:    #18140F;
+  --accent:        #C7A46C;
+  --border:        #4B4032;
+  --border-subtle: #332B22;
+  --text-primary:  #F8F2E8;
+  --text-secondary:#D7CCBE;
+  --text-muted:    #B2A28E;
+  --success:       #6CCB6E;
+  --warning:       #E8B04D;
+  --error:         #E57373;
+  --high:          #FB923C;
+  --info:          #64B5F6;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Alegreya', Georgia, 'Times New Roman', serif;
+  background-color: var(--bg);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+.scrollbar-none::-webkit-scrollbar { width: 0; }
+
+/* Smooth transition on theme switch for all colored elements */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, stroke 0.2s ease, fill 0.2s ease;
+}
+/* But not transitions on things that have their own motion */
+button, a, input, select, textarea { transition: none; }

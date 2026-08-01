@@ -1,0 +1,146 @@
+{
+  "heatmap": [
+    {
+      "service": "Auth Service",
+      "critical": 4,
+      "high": 2,
+      "medium": 1,
+      "low": 0
+    },
+    {
+      "service": "User Service",
+      "critical": 3,
+      "high": 5,
+      "medium": 4,
+      "low": 2
+    },
+    {
+      "service": "Payments",
+      "critical": 2,
+      "high": 4,
+      "medium": 3,
+      "low": 1
+    },
+    {
+      "service": "Orders",
+      "critical": 1,
+      "high": 3,
+      "medium": 6,
+      "low": 3
+    },
+    {
+      "service": "Analytics",
+      "critical": 2,
+      "high": 1,
+      "medium": 2,
+      "low": 4
+    },
+    {
+      "service": "Inventory",
+      "critical": 0,
+      "high": 1,
+      "medium": 3,
+      "low": 7
+    },
+    {
+      "service": "Notifications",
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 5
+    }
+  ],
+  "topVulnerable": [
+    {
+      "name": "/api/v2/users/auth",
+      "service": "Auth Service",
+      "score": 9.1,
+      "trend": "up",
+      "issues": 6
+    },
+    {
+      "name": "/api/v3/analytics/export",
+      "service": "Analytics",
+      "score": 8.8,
+      "trend": "same",
+      "issues": 4
+    },
+    {
+      "name": "/api/v1/payments/charge",
+      "service": "Payments",
+      "score": 7.5,
+      "trend": "down",
+      "issues": 5
+    },
+    {
+      "name": "/api/v2/orders/batch",
+      "service": "Orders",
+      "score": 7.2,
+      "trend": "up",
+      "issues": 3
+    },
+    {
+      "name": "/api/v2/users/reset",
+      "service": "User Service",
+      "score": 6.8,
+      "trend": "down",
+      "issues": 3
+    }
+  ],
+  "trendPoints": [72, 75, 71, 78, 80, 76, 83, 85, 87, 88, 90, 91],
+  "trendMonths": ["Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"],
+  "riskContributors": [
+    {
+      "cat": "Authentication & Authorization",
+      "pct": 72,
+      "count": 12,
+      "color": "var(--error)"
+    },
+    {
+      "cat": "Data Exposure",
+      "pct": 48,
+      "count": 8,
+      "color": "var(--high)"
+    },
+    {
+      "cat": "Security Misconfiguration",
+      "pct": 35,
+      "count": 6,
+      "color": "var(--warning)"
+    },
+    {
+      "cat": "Injection Attacks",
+      "pct": 20,
+      "count": 3,
+      "color": "var(--warning)"
+    },
+    {
+      "cat": "Rate Limiting",
+      "pct": 18,
+      "count": 3,
+      "color": "var(--success)"
+    }
+  ],
+  "businessImpact": [
+    {
+      "label": "Data records at risk",
+      "value": "2.4M",
+      "color": "var(--error)"
+    },
+    {
+      "label": "Financial exposure",
+      "value": "$840K",
+      "color": "var(--high)"
+    },
+    {
+      "label": "Compliance violations",
+      "value": "7",
+      "color": "var(--warning)"
+    },
+    {
+      "label": "APIs at baseline",
+      "value": "91%",
+      "color": "var(--success)"
+    }
+  ]
+}

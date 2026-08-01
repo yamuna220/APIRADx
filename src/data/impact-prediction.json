@@ -1,0 +1,41 @@
+{
+  "apis": [
+    "/api/v2/users/auth",
+    "/api/v1/payments/charge",
+    "/api/v2/orders/{id}",
+    "/api/v3/analytics/export",
+    "/api/v1/inventory/items",
+    "/api/v2/notifications/send"
+  ],
+  "versions": ["v1.0", "v1.5", "v2.0", "v2.1", "v3.0", "v3.1"],
+  "changeTypes": ["Breaking Change", "Deprecation", "Schema Change", "Auth Update", "Rate Limit Change", "Endpoint Removal"],
+  "mockResult": {
+    "affectedServices": [
+      { "name": "Auth Service", "impact": "Critical", "reason": "Direct dependency — authentication flow will break" },
+      { "name": "Orders Service", "impact": "High", "reason": "Uses JWT tokens issued by this endpoint" },
+      { "name": "Payments Service", "impact": "High", "reason": "Payment authorization relies on valid auth tokens" },
+      { "name": "Notifications", "impact": "Medium", "reason": "User session events may not fire correctly" },
+      { "name": "Analytics", "impact": "Low", "reason": "Tracking events may be partially affected" }
+    ],
+    "downstreamAPIs": [
+      { "path": "/api/v2/orders/batch", "consumers": 3 },
+      { "path": "/api/v1/payments/charge", "consumers": 5 },
+      { "path": "/api/v2/users/profile", "consumers": 2 },
+      { "path": "/api/v1/inventory/reserve", "consumers": 1 }
+    ],
+    "businessImpact": [
+      { "area": "Revenue", "severity": "Critical", "detail": "Payment processing will fail until auth is restored. Estimated $12K/hr loss." },
+      { "area": "Compliance", "severity": "High", "detail": "GDPR audit trail may be incomplete during downtime window." },
+      { "area": "User Experience", "severity": "High", "detail": "All logged-in users will be forcibly logged out on deployment." }
+    ],
+    "deploymentRisk": "Critical",
+    "recommendedTests": [
+      "Run full auth regression suite before deployment",
+      "Test JWT token validation across all dependent services",
+      "Verify session persistence after token rotation",
+      "Load test the new endpoint at 2× normal traffic",
+      "Confirm rollback plan with < 5 minute RTO"
+    ],
+    "chain": ["API Gateway", "→", "Auth Service", "→", "Orders", "→", "Payments"]
+  }
+}
