@@ -19,7 +19,9 @@ export default function Login({ onLogin, isDark, onToggleDark, onNavigate }: Pro
     setLoading(true)
 
     try {
-      await authApi.login(email, password)
+      // Mock login for demo purposes since backend is not deployed
+      await new Promise(resolve => setTimeout(resolve, 800))
+      // await authApi.login(email, password)
       addNotification({
         category: 'general',
         priority: 'normal',
