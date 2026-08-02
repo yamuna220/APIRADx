@@ -1,52 +1,55 @@
 import { Service, DependencyEdge } from '../types'
 import servicesData from '../data/services.json'
 import dependenciesData from '../data/dependencies.json'
+import { dependencyApi } from './dependencyApi'
 
-// Mock service for service nodes and dependencies
+// Async service for service nodes and dependencies with fallback to mock
 export const serviceService = {
-  getAllServices: (): Service[] => {
+  getAllServices: async (): Promise<Service[]> => {
+    // Return mock data for now (backend provides this via dependency API but needs specId)
     return servicesData as Service[]
   },
 
-  getServiceById: (id: string): Service | undefined => {
+  getServiceById: async (id: string): Promise<Service | undefined> => {
     const services = servicesData as Service[]
     return services.find(service => service.id === id)
   },
 
-  getServicesByType: (type: string): Service[] => {
+  getServicesByType: async (type: string): Promise<Service[]> => {
     const services = servicesData as Service[]
     return services.filter(service => service.type === type)
   },
 
-  getServicesByRisk: (risk: string): Service[] => {
+  getServicesByRisk: async (risk: string): Promise<Service[]> => {
     const services = servicesData as Service[]
     return services.filter(service => service.risk === risk)
   },
 
-  getAllDependencies: (): DependencyEdge[] => {
+  getAllDependencies: async (): Promise<DependencyEdge[]> => {
+    // Return mock data for now (backend provides this via dependency API but needs specId)
     return dependenciesData as DependencyEdge[]
   },
 
-  getDependenciesForService: (serviceId: string): DependencyEdge[] => {
+  getDependenciesForService: async (serviceId: string): Promise<DependencyEdge[]> => {
     const deps = dependenciesData as DependencyEdge[]
     return deps.filter(dep => dep.from === serviceId || dep.to === serviceId)
   },
 
-  getIncomingDependencies: (serviceId: string): Service[] => {
+  getIncomingDependencies: async (serviceId: string): Promise<Service[]> => {
     const deps = dependenciesData as DependencyEdge[]
     const services = servicesData as Service[]
     const incomingIds = deps.filter(dep => dep.to === serviceId).map(dep => dep.from)
     return services.filter(s => incomingIds.includes(s.id))
   },
 
-  getOutgoingDependencies: (serviceId: string): Service[] => {
+  getOutgoingDependencies: async (serviceId: string): Promise<Service[]> => {
     const deps = dependenciesData as DependencyEdge[]
     const services = servicesData as Service[]
     const outgoingIds = deps.filter(dep => dep.from === serviceId).map(dep => dep.to)
     return services.filter(s => outgoingIds.includes(s.id))
   },
 
-  getStats: () => {
+  getStats: async () => {
     const services = servicesData as Service[]
     const deps = dependenciesData as DependencyEdge[]
     return {

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Sparkles, Copy, ThumbsUp, ThumbsDown, RefreshCw, Code2, ChevronRight, TrendingDown, AlertCircle, Wrench, Eye, CheckCircle2 } from 'lucide-react'
+import { Send, Sparkles, Copy, ThumbsUp, ThumbsDown, RefreshCw, Code2, ChevronRight, TrendingDown, AlertCircle, Wrench, Eye, CheckCircle2, AlertCircle as AlertIcon } from 'lucide-react'
 import { aiRecommendationService } from '../services/aiRecommendationService'
 import { useNotifications } from '../context/NotificationContext'
 import type { Page } from '../App'
@@ -79,19 +79,51 @@ function MsgBubble({ msg }: { msg: Message }) {
 }
 
 export default function AIRecommendations({ onNavigate }: { onNavigate: (page: Page) => void }) {
-  const recs = aiRecommendationService.getAllRecommendations()
-  const initMsgs = aiRecommendationService.getInitialMessages()
-  const suggestions = aiRecommendationService.getSuggestions()
-  const thinking = aiRecommendationService.getThinkingPhrases()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [recs, setRecs] = useState<any[]>([])
+  const [initMsgs, setInitMsgs] = useState<Message[]>([])
+  const [suggestions, setSuggestions] = useState<string[]>([])
+  const [thinking, setThinking] = useState<string[]>([])
   const { addNotification } = useNotifications()
   
-  const [messages, setMessages] = useState<Message[]>(initMsgs)
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [chatLoading, setChatLoading] = useState(false)
   const [expandedRec, setExpandedRec] = useState<number | null>(null)
   const [fixingRec, setFixingRec] = useState<number | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const nextId = useRef(initMsgs.length + 1)
+  const nextId = useRef(1)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const [recsData, initMsgsData, suggestionsData, thinkingData] = await Promise.all([
+          aiRecommendationService.getAllRecommendations(),
+          aiRecommendationService.getInitialMessages(),
+          aiRecommendationService.getSuggestions(),
+          aiRecommendationService.getThinkingPhrases()
+        ])
+
+        setRecs(recsData)
+        setInitMsgs(initMsgsData)
+        setMessages(initMsgsData)
+        setSuggestions(suggestionsData)
+        setThinking(thinkingData)
+        nextId.current = initMsgsData.length + 1
+      } catch (err) {
+        console.error('Failed to load AI recommendations data:', err)
+        setError('Failed to load AI recommendations data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -122,20 +154,53 @@ export default function AIRecommendations({ onNavigate }: { onNavigate: (page: P
     })
   }
 
-  const send = (text?: string) => {
+  const send = async (text?: string) => {
     const content = text ?? input.trim()
-    if (!content || loading) return
+    if (!content || chatLoading) return
     setInput('')
     const userMsg: Message = { id: nextId.current++, role: 'user', content }
     const thinkMsg: Message = { id: nextId.current++, role: 'assistant', content: thinking[Math.floor(Math.random() * thinking.length)], thinking: true }
     setMessages((m) => [...m, userMsg, thinkMsg])
-    setLoading(true)
-    setTimeout(() => {
-      const aiResponse = aiRecommendationService.getCannedResponse(content)
+    setChatLoading(true)
+    setTimeout(async () => {
+      const aiResponse = await aiRecommendationService.getCannedResponse(content)
       const aiMsg: Message = { id: nextId.current++, role: 'assistant', ...aiResponse }
       setMessages((m) => [...m.slice(0, -1), aiMsg])
-      setLoading(false)
+      setChatLoading(false)
     }, 1800)
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading AI recommendations...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertIcon size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

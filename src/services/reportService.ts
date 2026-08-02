@@ -7,24 +7,26 @@ import { DependencyGraph } from '../types/dependency'
 import { AIRecommendation } from '../types/ai'
 import { LegacyParsedAPISpec } from '../utils/openapiParser'
 import { ReportGenerationOptions, ExportResult, SecurityReport, ReportFormat } from '../types/report'
+import { reportsApi } from './reportsApi'
 
-// Mock service for reports
+// Async service for reports with fallback to mock
 export const reportService = {
-  getAllReports: (): Report[] => {
+  getAllReports: async (): Promise<Report[]> => {
+    // Return mock data for now (backend provides this via reports API)
     return reportsData as Report[]
   },
 
-  getReportById: (id: number): Report | undefined => {
+  getReportById: async (id: number): Promise<Report | undefined> => {
     const reports = reportsData as Report[]
     return reports.find(r => r.id === id)
   },
 
-  getReportsByType: (type: string): Report[] => {
+  getReportsByType: async (type: string): Promise<Report[]> => {
     const reports = reportsData as Report[]
     return reports.filter(r => r.type === type)
   },
 
-  getStats: () => {
+  getStats: async () => {
     const reports = reportsData as Report[]
     return {
       total: reports.length,
@@ -36,14 +38,14 @@ export const reportService = {
   },
 
   // Generate a comprehensive security report
-  generateSecurityReport: (
+  generateSecurityReport: async (
     spec: LegacyParsedAPISpec,
     securityResult: SecurityAnalysisResult,
     riskScore: RiskScoreResult,
     dependencyGraph: DependencyGraph,
     aiRecommendations: AIRecommendation[],
     options?: Partial<ReportGenerationOptions>
-  ): SecurityReport => {
+  ): Promise<SecurityReport> => {
     const defaultOptions: ReportGenerationOptions = {
       includeExecutiveSummary: true,
       includeSecurityFindings: true,
@@ -60,36 +62,48 @@ export const reportService = {
   },
 
   // Export report to specified format
-  exportReport: (report: SecurityReport, format: ReportFormat): ExportResult => {
+  exportReport: async (report: SecurityReport, format: ReportFormat): Promise<ExportResult> => {
     return exportReport(report, format)
   },
 
-  // Delete a report by ID
-  deleteReport: (id: string): void => {
-    const reports = reportsData as Report[]
-    const index = reports.findIndex(r => r.id.toString() === id)
-    if (index !== -1) {
-      reports.splice(index, 1)
+  // Delete a report by ID (uses backend API)
+  deleteReport: async (id: string): Promise<void> => {
+    try {
+      await reportsApi.deleteReport(id)
+    } catch (error) {
+      console.error('Failed to delete report via API, using fallback:', error)
+      // Fallback to mock deletion
+      const reports = reportsData as Report[]
+      const index = reports.findIndex(r => r.id.toString() === id)
+      if (index !== -1) {
+        reports.splice(index, 1)
+      }
     }
   },
 
-  // Rename a report
-  renameReport: (id: string, newName: string): void => {
-    const reports = reportsData as Report[]
-    const report = reports.find(r => r.id.toString() === id)
-    if (report) {
-      report.name = newName
+  // Rename a report (uses backend API)
+  renameReport: async (id: string, newName: string): Promise<void> => {
+    try {
+      await reportsApi.updateReport(id, { name: newName })
+    } catch (error) {
+      console.error('Failed to rename report via API, using fallback:', error)
+      // Fallback to mock rename
+      const reports = reportsData as Report[]
+      const report = reports.find(r => r.id.toString() === id)
+      if (report) {
+        report.name = newName
+      }
     }
   },
 
   // Add a new report
-  addReport: (report: Report): void => {
+  addReport: async (report: Report): Promise<void> => {
     const reports = reportsData as Report[]
     reports.push(report)
   },
 
   // Generate and export report in one step
-  generateAndExportReport: (
+  generateAndExportReport: async (
     spec: LegacyParsedAPISpec,
     securityResult: SecurityAnalysisResult,
     riskScore: RiskScoreResult,
@@ -97,8 +111,8 @@ export const reportService = {
     aiRecommendations: AIRecommendation[],
     format: ReportFormat,
     options?: Partial<ReportGenerationOptions>
-  ): ExportResult => {
-    const report = reportService.generateSecurityReport(
+  ): Promise<ExportResult> => {
+    const report = await reportService.generateSecurityReport(
       spec,
       securityResult,
       riskScore,
@@ -106,6 +120,6 @@ export const reportService = {
       aiRecommendations,
       { ...options, format }
     )
-    return reportService.exportReport(report, format)
+    return await reportService.exportReport(report, format)
   }
 }

@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react'
+import { useState, Fragment, useEffect } from 'react'
 import {
   Search, ZoomIn, ZoomOut, RefreshCw, Download, X,
   AlertCircle, CheckCircle2, Activity, Sparkles, ChevronRight,
@@ -512,19 +512,48 @@ function PanelPlaceholder({ nodes, edges }: { nodes: SNode[], edges: SEdge[] }) 
 import type { Page } from '../App'
 
 export default function DependencyGraph({ onNavigate }: { onNavigate: (page: Page) => void }) {
-  const NODES = serviceService.getAllServices() as SNode[]
-  const EDGES = serviceService.getAllDependencies() as SEdge[]
-  const stats = serviceService.getStats()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [NODES, setNODES] = useState<SNode[]>([])
+  const [EDGES, setEDGES] = useState<SEdge[]>([])
+  const [stats, setStats] = useState<any>(null)
   
   const [selected,        setSelected]       = useState<string | null>(null)
   const [hovered,         setHovered]        = useState<string | null>(null)
   const [zoom,            setZoom]           = useState(1)
   const [search,          setSearch]         = useState('')
   const [riskFilters,     setRiskFilters]    = useState<Set<Risk>>(new Set<Risk>(['Critical', 'High', 'Medium', 'Low', 'Healthy', 'Inactive']))
-  const [typeFilters,     setTypeFilters]    = useState<Set<SvcType>>(new Set<SvcType>(NODES.map(n => n.type)))
+  const [typeFilters,     setTypeFilters]    = useState<Set<SvcType>>(new Set<SvcType>())
   const [showCritPath,    setShowCritPath]   = useState(false)
   const [detailTab,       setDetailTab]      = useState<'overview' | 'connections' | 'ai'>('overview')
   const [ctxMenu,         setCtxMenu]        = useState<{ x: number; y: number; nodeId: string } | null>(null)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const [nodesData, edgesData, statsData] = await Promise.all([
+          serviceService.getAllServices(),
+          serviceService.getAllDependencies(),
+          serviceService.getStats()
+        ])
+
+        setNODES(nodesData as unknown as SNode[])
+        setEDGES(edgesData as unknown as SEdge[])
+        setStats(statsData)
+        setTypeFilters(new Set<SvcType>((nodesData as unknown as SNode[]).map(n => n.type)))
+      } catch (err) {
+        console.error('Failed to load dependency graph data:', err)
+        setError('Failed to load dependency graph data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   const focus = selected ?? hovered
   const highlighted: Set<string> | null = focus
@@ -541,14 +570,47 @@ export default function DependencyGraph({ onNavigate }: { onNavigate: (page: Pag
     const s = new Set(prev); s.has(t) ? s.delete(t) : s.add(t); return s
   })
 
-  const kpis = [
+  const kpis = stats ? [
     { label: 'Services',     value: stats.total,                                                color: 'var(--brand)' },
     { label: 'Total APIs',   value: stats.totalEndpoints,                                       color: 'var(--info)' },
     { label: 'Critical',     value: stats.critical,                                            color: 'var(--error)' },
     { label: 'Dependencies', value: stats.totalDependencies,                                  color: 'var(--text-secondary)' },
     { label: 'Ext. Services',value: stats.external,                                            color: '#A78BFA' },
     { label: 'Avg Health',   value: `${stats.avgHealth}%`,                                      color: 'var(--success)' },
-  ]
+  ] : []
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading dependency graph...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertCircle size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-full" style={{ background: 'var(--bg)' }}

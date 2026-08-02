@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Search, Filter, ChevronDown, ChevronLeft, ChevronRight, ArrowUpDown, AlertTriangle, Shield, ExternalLink } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Filter, ChevronDown, ChevronLeft, ChevronRight, ArrowUpDown, AlertTriangle, Shield, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react'
 import { vulnerabilityService } from '../services/vulnerabilityService'
 import type { Page } from '../App'
 
@@ -78,23 +78,82 @@ function FindingCard({ f, onNavigate }: { f: any; onNavigate: (page: Page) => vo
 }
 
 export default function SecurityAnalysis({ onNavigate }: { onNavigate: (page: Page) => void }) {
-  const findings = vulnerabilityService.getAllVulnerabilities()
-  const counts = vulnerabilityService.getSeverityCounts()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [findings, setFindings] = useState<any[]>([])
+  const [counts, setCounts] = useState<any>(null)
   const [filter, setFilter] = useState('All')
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('severity')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [page, setPage] = useState(1)
   const itemsPerPage = 10
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const [findingsData, countsData] = await Promise.all([
+          vulnerabilityService.getAllVulnerabilities(),
+          vulnerabilityService.getSeverityCounts()
+        ])
+
+        setFindings(findingsData)
+        setCounts(countsData)
+      } catch (err) {
+        console.error('Failed to load security analysis data:', err)
+        setError('Failed to load security analysis data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
   
   const filtered = filter === 'All' ? findings : findings.filter((f) => f.severity === filter)
   
   const searched = search 
-    ? filtered.filter(f => 
+    ? filtered.filter((f: any) => 
         f.title.toLowerCase().includes(search.toLowerCase()) ||
         f.description.toLowerCase().includes(search.toLowerCase())
       )
     : filtered
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading security analysis...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertCircle size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
   
   const sorted = [...searched].sort((a, b) => {
     let comparison = 0
@@ -164,7 +223,7 @@ export default function SecurityAnalysis({ onNavigate }: { onNavigate: (page: Pa
               className="p-4 rounded-[18px] border-2 text-left transition-all"
               style={{ background: filter === sev ? sc.bg : 'var(--card)', borderColor: filter === sev ? sc.text : 'var(--border)' }}
             >
-              <div className="text-[30px] font-800 leading-none" style={{ color: sc.text }}>{count}</div>
+              <div className="text-[30px] font-800 leading-none" style={{ color: sc.text }}>{count as number}</div>
               <div className="text-[12px] font-500 mt-1.5" style={{ color: filter === sev ? sc.text : 'var(--text-secondary)' }}>{sev}</div>
             </button>
           )

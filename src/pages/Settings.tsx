@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Bell, Key, Palette, Shield, Copy, Eye, EyeOff, Plus, Trash2, Users, CreditCard, Loader2 } from 'lucide-react'
+import { Users, Key, Shield, Bell, Globe, Moon, Sun, RefreshCw, AlertCircle, User, Palette, CreditCard, Loader2, Plus, Trash2, Eye, EyeOff, Copy } from 'lucide-react'
 import { settingsService } from '../services/settingsService'
 import { useNotifications } from '../context/NotificationContext'
 
@@ -593,11 +593,31 @@ function SecurityTab() {
 
 function APIKeysTab() {
   const { addNotification } = useNotifications()
-  const [keys, setKeys] = useState(settingsService.getAPIKeys())
+  const [loading, setLoading] = useState(true)
+  const [keys, setKeys] = useState<any[]>([])
   const [visible, setVisible] = useState<string | null>(null)
   const [showNewKeyModal, setShowNewKeyModal] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
-  const realKey = (prefix: string) => settingsService.getFullKey(prefix)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        const data = await settingsService.getAPIKeys()
+        setKeys(data)
+      } catch (err) {
+        console.error('Failed to load API keys:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  const realKey = async (prefix: string) => {
+    const key = await settingsService.getFullKey(prefix)
+    return key
+  }
 
   const handleCreateKey = () => {
     if (!newKeyName.trim()) {
@@ -639,8 +659,9 @@ function APIKeysTab() {
     })
   }
 
-  const handleCopyKey = (prefix: string) => {
-    navigator.clipboard.writeText(realKey(prefix))
+  const handleCopyKey = async (prefix: string) => {
+    const key = await realKey(prefix)
+    navigator.clipboard.writeText(key)
     addNotification({
       category: 'general',
       priority: 'normal',
@@ -843,8 +864,43 @@ const tabContent: Record<Tab, React.ComponentType> = {
 }
 
 export default function Settings() {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [active, setActive] = useState<Tab>('workspace')
   const Content = tabContent[active]
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading settings...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertCircle size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 max-w-[1000px]">

@@ -26,21 +26,25 @@ interface ImpactResult {
   chain: string[]
 }
 
-// Mock service for impact prediction
+// Async service for impact prediction with fallback to mock
 export const impactService = {
-  getAPIs: (): string[] => {
+  getAPIs: async (): Promise<string[]> => {
+    // Return mock data for now (backend doesn't provide this yet)
     return impactData.apis as string[]
   },
 
-  getVersions: (): string[] => {
+  getVersions: async (): Promise<string[]> => {
+    // Return mock data for now (backend doesn't provide this yet)
     return impactData.versions as string[]
   },
 
-  getChangeTypes: (): string[] => {
+  getChangeTypes: async (): Promise<string[]> => {
+    // Return mock data for now (backend doesn't provide this yet)
     return impactData.changeTypes as string[]
   },
 
-  getMockResult: (): ImpactResult => {
+  getMockResult: async (): Promise<ImpactResult> => {
+    // Return mock data for now (backend doesn't provide this yet)
     return impactData.mockResult as ImpactResult
   }
 }

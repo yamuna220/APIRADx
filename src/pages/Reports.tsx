@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { FileText, Download, Calendar, Shield, AlertTriangle, CheckCircle2, ExternalLink, Share2, Loader2, X, Eye, Trash2, Edit2, Copy, Mail, Users } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { FileText, Download, Calendar, Shield, AlertTriangle, CheckCircle2, ExternalLink, Share2, Loader2, X, Eye, Trash2, Edit2, Copy, Mail, Users, Filter, ChevronDown, RefreshCw, AlertCircle } from 'lucide-react'
 import Logo from '../components/Logo'
 import { reportService } from '../services/reportService'
 import { exportReport } from '../utils/reportGenerator'
@@ -23,7 +23,9 @@ const typeColors: Record<string, string> = {
 }
 
 export default function Reports({ onNavigate }: { onNavigate: (page: Page) => void }) {
-  const history = reportService.getAllReports()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [history, setHistory] = useState<any[]>([])
   const { uploadedSpecs } = useUploads()
   const { addNotification } = useNotifications()
   const [generating, setGenerating] = useState(false)
@@ -43,6 +45,56 @@ export default function Reports({ onNavigate }: { onNavigate: (page: Page) => vo
   const [shareEmail, setShareEmail] = useState('')
   const [generatingPDF, setGeneratingPDF] = useState<Set<string>>(new Set())
   const [generatingCSV, setGeneratingCSV] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await reportService.getAllReports()
+        setHistory(data)
+      } catch (err) {
+        console.error('Failed to load reports:', err)
+        setError('Failed to load reports. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading reports...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertCircle size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const handleGenerateReport = async (reportType: string) => {
     setSelectedReportType(reportType)

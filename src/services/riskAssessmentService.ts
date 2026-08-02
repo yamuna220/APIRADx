@@ -1,33 +1,41 @@
 import { RiskHeatmapRow } from '../types'
 import riskAssessmentData from '../data/risk-assessment.json'
+import { riskApi } from './riskApi'
 
-// Mock service for risk assessment data
+// Async service for risk assessment data with fallback to mock
 export const riskAssessmentService = {
-  getHeatmap: (): RiskHeatmapRow[] => {
+  getHeatmap: async (): Promise<RiskHeatmapRow[]> => {
+    // Return mock data for now (backend doesn't provide this yet)
     return riskAssessmentData.heatmap as RiskHeatmapRow[]
   },
 
-  getTopVulnerable: () => {
+  getTopVulnerable: async () => {
+    // Return mock data for now (backend doesn't provide this yet)
     return riskAssessmentData.topVulnerable
   },
 
-  getTrendPoints: (): number[] => {
+  getTrendPoints: async (): Promise<number[]> => {
+    // Return mock data for now (backend doesn't provide this yet)
     return riskAssessmentData.trendPoints
   },
 
-  getTrendMonths: (): string[] => {
+  getTrendMonths: async (): Promise<string[]> => {
+    // Return mock data for now (backend doesn't provide this yet)
     return riskAssessmentData.trendMonths
   },
 
-  getRiskContributors: () => {
+  getRiskContributors: async () => {
+    // Return mock data for now (backend doesn't provide this yet)
     return riskAssessmentData.riskContributors
   },
 
-  getBusinessImpact: () => {
+  getBusinessImpact: async () => {
+    // Return mock data for now (backend doesn't provide this yet)
     return riskAssessmentData.businessImpact
   },
 
-  getStats: () => {
+  getStats: async () => {
+    // Return mock data for now (backend doesn't provide this yet)
     const heatmap = riskAssessmentData.heatmap as RiskHeatmapRow[]
     return {
       totalServices: heatmap.length,

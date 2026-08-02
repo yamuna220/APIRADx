@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ChevronDown, Zap, AlertTriangle, CheckCircle2, ArrowRight, GitBranch } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Zap, ArrowRight, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, RefreshCw, AlertCircle, ChevronDown, GitBranch } from 'lucide-react'
 import { impactService } from '../services/impactService'
 
 const card = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 18 }
@@ -40,20 +40,86 @@ function Select({ label, options, value, onChange }: { label: string; options: s
 import type { Page } from '../App'
 
 export default function ImpactPrediction({ onNavigate }: { onNavigate: (page: Page) => void }) {
-  const apis = impactService.getAPIs()
-  const versions = impactService.getVersions()
-  const changeTypes = impactService.getChangeTypes()
-  const mockResult = impactService.getMockResult()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [apis, setApis] = useState<string[]>([])
+  const [versions, setVersions] = useState<string[]>([])
+  const [changeTypes, setChangeTypes] = useState<string[]>([])
+  const [mockResult, setMockResult] = useState<ImpactResult | null>(null)
   
-  const [api, setApi] = useState(apis[0])
-  const [version, setVersion] = useState(versions[4])
-  const [changeType, setChangeType] = useState(changeTypes[0])
+  const [api, setApi] = useState('')
+  const [version, setVersion] = useState('')
+  const [changeType, setChangeType] = useState('')
   const [result, setResult] = useState<ImpactResult | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [analyzeLoading, setAnalyzeLoading] = useState(false)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const [apisData, versionsData, changeTypesData, mockResultData] = await Promise.all([
+          impactService.getAPIs(),
+          impactService.getVersions(),
+          impactService.getChangeTypes(),
+          impactService.getMockResult()
+        ])
+
+        setApis(apisData)
+        setVersions(versionsData)
+        setChangeTypes(changeTypesData)
+        setMockResult(mockResultData)
+        setApi(apisData[0])
+        setVersion(versionsData[4] || versionsData[0])
+        setChangeType(changeTypesData[0])
+      } catch (err) {
+        console.error('Failed to load impact prediction data:', err)
+        setError('Failed to load impact prediction data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   const analyze = () => {
-    setLoading(true)
-    setTimeout(() => { setResult(mockResult); setLoading(false) }, 1200)
+    setAnalyzeLoading(true)
+    setTimeout(() => { setResult(mockResult); setAnalyzeLoading(false) }, 1200)
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading impact prediction...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertCircle size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const dr = result ? riskVars[result.deploymentRisk] : null
@@ -72,13 +138,13 @@ export default function ImpactPrediction({ onNavigate }: { onNavigate: (page: Pa
           <Select label="Version" options={versions} value={version} onChange={setVersion} />
           <Select label="Change Type" options={changeTypes} value={changeType} onChange={setChangeType} />
         </div>
-        <button onClick={analyze} disabled={loading}
+        <button onClick={analyze} disabled={analyzeLoading}
           className="flex items-center gap-2 px-6 py-3 rounded-[14px] font-600 text-[14px] transition-colors disabled:opacity-60"
           style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
-          onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--brand-hover)' }}
-          onMouseLeave={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = 'var(--brand)' }}
+          onMouseEnter={(e) => { if (!analyzeLoading) (e.currentTarget as HTMLElement).style.background = 'var(--brand-hover)' }}
+          onMouseLeave={(e) => { if (!analyzeLoading) (e.currentTarget as HTMLElement).style.background = 'var(--brand)' }}
         >
-          {loading ? (
+          {analyzeLoading ? (
             <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Predicting impact...</>
           ) : (
             <><Zap size={15} />Predict Impact</>

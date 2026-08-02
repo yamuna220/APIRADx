@@ -1,4 +1,5 @@
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { TrendingUp, TrendingDown, RefreshCw, AlertCircle } from 'lucide-react'
 import { riskAssessmentService } from '../services/riskAssessmentService'
 
 const card = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 18 }
@@ -230,34 +231,106 @@ function BusinessImpact({ impactItems }: { impactItems: any[] }) {
   )
 }
 
-import type { Page } from '../App'
+export default function RiskAssessment() {
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [heatmap, setHeatmap] = useState<any>(null)
+  const [topVulnerable, setTopVulnerable] = useState<any>(null)
+  const [trendPoints, setTrendPoints] = useState<any>(null)
+  const [trendMonths, setTrendMonths] = useState<any>(null)
+  const [riskContributors, setRiskContributors] = useState<any>(null)
+  const [businessImpact, setBusinessImpact] = useState<any>(null)
 
-export default function RiskAssessment({ onNavigate }: { onNavigate: (page: Page) => void }) {
-  const heatmap = riskAssessmentService.getHeatmap()
-  const topVuln = riskAssessmentService.getTopVulnerable()
-  const trendPts = riskAssessmentService.getTrendPoints()
-  const months = riskAssessmentService.getTrendMonths()
-  const contributors = riskAssessmentService.getRiskContributors()
-  const impactItems = riskAssessmentService.getBusinessImpact()
-  
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const [
+          heatmapData,
+          topVuln,
+          trendP,
+          trendM,
+          riskContrib,
+          busImpact
+        ] = await Promise.all([
+          riskAssessmentService.getHeatmap(),
+          riskAssessmentService.getTopVulnerable(),
+          riskAssessmentService.getTrendPoints(),
+          riskAssessmentService.getTrendMonths(),
+          riskAssessmentService.getRiskContributors(),
+          riskAssessmentService.getBusinessImpact()
+        ])
+
+        setHeatmap(heatmapData)
+        setTopVulnerable(topVuln)
+        setTrendPoints(trendP)
+        setTrendMonths(trendM)
+        setRiskContributors(riskContrib)
+        setBusinessImpact(busImpact)
+      } catch (err) {
+        console.error('Failed to load risk assessment data:', err)
+        setError('Failed to load risk assessment data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading risk assessment...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertCircle size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">
       <div>
         <h1 className="text-[22px] font-700 tracking-tight" style={{ color: 'var(--text-primary)', fontFamily: 'Alegreya, serif' }}>Risk Assessment</h1>
-        <p className="text-[13px] mt-1" style={{ color: 'var(--text-muted)' }}>Comprehensive risk scoring and trend analysis across your API portfolio.</p>
+        <p className="text-[13px] mt-1" style={{ color: 'var(--text-muted)' }}>Overall security posture and risk metrics</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <RiskGauge />
-        <div className="lg:col-span-2"><ScoreTrend trendPts={trendPts} months={months} /></div>
+        <div className="lg:col-span-2"><ScoreTrend trendPts={trendPoints} months={trendMonths} /></div>
       </div>
 
       <Heatmap heatmap={heatmap} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <TopVulnerable topVuln={topVuln} />
-        <RiskContributors contributors={contributors} />
-        <BusinessImpact impactItems={impactItems} />
+        <TopVulnerable topVuln={topVulnerable} />
+        <RiskContributors contributors={riskContributors} />
+        <BusinessImpact impactItems={businessImpact} />
       </div>
     </div>
   )

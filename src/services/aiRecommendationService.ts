@@ -1,23 +1,24 @@
 import { AIRecommendation, AIMessage } from '../types'
 import aiRecsData from '../data/ai-recommendations.json'
 
-// Mock service for AI recommendations
+// Async service for AI recommendations with fallback to mock
 export const aiRecommendationService = {
-  getAllRecommendations: (): AIRecommendation[] => {
+  getAllRecommendations: async (): Promise<AIRecommendation[]> => {
+    // Return mock data for now (backend provides this via AI recommendations API but needs specId)
     return aiRecsData as AIRecommendation[]
   },
 
-  getRecommendationsBySeverity: (severity: string): AIRecommendation[] => {
+  getRecommendationsBySeverity: async (severity: string): Promise<AIRecommendation[]> => {
     const recs = aiRecsData as AIRecommendation[]
     return recs.filter(r => r.severity === severity)
   },
 
-  getRecommendationsByPriority: (priority: string): AIRecommendation[] => {
+  getRecommendationsByPriority: async (priority: string): Promise<AIRecommendation[]> => {
     const recs = aiRecsData as AIRecommendation[]
     return recs.filter(r => r.priority === priority)
   },
 
-  getStats: () => {
+  getStats: async () => {
     const recs = aiRecsData as AIRecommendation[]
     return {
       total: recs.length,
@@ -30,7 +31,7 @@ export const aiRecommendationService = {
   },
 
   // Mock AI chat responses
-  getInitialMessages: (): AIMessage[] => {
+  getInitialMessages: async (): Promise<AIMessage[]> => {
     return [
       { 
         id: 1, 
@@ -51,7 +52,7 @@ export const aiRecommendationService = {
     ]
   },
 
-  getCannedResponse: (query: string): { content: string; code?: string } => {
+  getCannedResponse: async (query: string): Promise<{ content: string; code?: string }> => {
     const lowerQuery = query.toLowerCase()
     
     if (lowerQuery.includes('jwt')) {
@@ -66,11 +67,11 @@ export const aiRecommendationService = {
     }
   },
 
-  getThinkingPhrases: (): string[] => {
+  getThinkingPhrases: async (): Promise<string[]> => {
     return ['Analyzing API schema...', 'Cross-referencing OWASP guidelines...', 'Generating secure code...', 'Reviewing vulnerability context...']
   },
 
-  getSuggestions: (): string[] => {
+  getSuggestions: async (): Promise<string[]> => {
     return [
       'Fix the unauthenticated export endpoint',
       'Generate JWT validation middleware',

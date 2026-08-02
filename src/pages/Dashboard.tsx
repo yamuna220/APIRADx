@@ -739,14 +739,62 @@ function Hero({ onScan, onUpload, onNavigate }: { onScan: () => void; onUpload: 
 
 export default function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
   const { uploadedSpecs, getTotalEndpoints, getTotalRisks } = useUploads()
-  const kpiSparkData = dashboardService.getKPISparkData()
-  const owaspDistribution = dashboardService.getOWASPDistribution()
-  const trendData = dashboardService.getTrendData()
-  const recentAnalysis = dashboardService.getRecentAnalysis()
-  const vulnerableAPIs = dashboardService.getVulnerableAPIs()
-  const aiInsights = dashboardService.getAIInsights()
-  const activityTimeline = dashboardService.getActivityTimeline()
-  const uploadHistory = dashboardService.getUploadHistory()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  const [kpiSparkData, setKpiSparkData] = useState<any>(null)
+  const [owaspDistribution, setOwaspDistribution] = useState<any>(null)
+  const [trendData, setTrendData] = useState<any>(null)
+  const [recentAnalysis, setRecentAnalysis] = useState<any>(null)
+  const [vulnerableAPIs, setVulnerableAPIs] = useState<any>(null)
+  const [aiInsights, setAiInsights] = useState<any>(null)
+  const [activityTimeline, setActivityTimeline] = useState<any>(null)
+  const [uploadHistory, setUploadHistory] = useState<any>(null)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const [
+          kpiData,
+          owaspData,
+          trendD,
+          recentAnal,
+          vulnAPIs,
+          aiData,
+          activityData,
+          uploadData
+        ] = await Promise.all([
+          dashboardService.getKPISparkData(),
+          dashboardService.getOWASPDistribution(),
+          dashboardService.getTrendData(),
+          dashboardService.getRecentAnalysis(),
+          dashboardService.getVulnerableAPIs(),
+          dashboardService.getAIInsights(),
+          dashboardService.getActivityTimeline(),
+          dashboardService.getUploadHistory()
+        ])
+
+        setKpiSparkData(kpiData)
+        setOwaspDistribution(owaspData)
+        setTrendData(trendD)
+        setRecentAnalysis(recentAnal)
+        setVulnerableAPIs(vulnAPIs)
+        setAiInsights(aiData)
+        setActivityTimeline(activityData)
+        setUploadHistory(uploadData)
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err)
+        setError('Failed to load dashboard data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
   
   // Calculate metrics including uploaded specs
   const baseAPIs = 284
@@ -758,6 +806,39 @@ export default function Dashboard({ onNavigate }: { onNavigate: (page: Page) => 
   
   const handleUpload = () => {
     onNavigate('upload-apis')
+  }
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertCircle size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
   
   return (

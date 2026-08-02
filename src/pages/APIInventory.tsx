@@ -1,22 +1,45 @@
-import { useState } from 'react'
-import { Search, Filter, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, Filter, ChevronLeft, ChevronRight, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react'
 import { apiService } from '../services/apiService'
+import type { Page } from '../App'
 
 const card = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 18 }
 
-const methodColors: Record<string, string> = { GET: 'var(--info)', POST: 'var(--success)', PUT: 'var(--warning)', DELETE: 'var(--error)', PATCH: '#A78BFA' }
-const riskColors: Record<string, string> = { Critical: 'var(--error)', High: 'var(--high)', Medium: 'var(--warning)', Low: 'var(--success)' }
-
-import type { Page } from '../App'
+const methodColors: Record<string, string> = {
+  GET: 'var(--info)', POST: 'var(--success)', PUT: 'var(--warning)',
+  DELETE: 'var(--error)', PATCH: '#A78BFA'
+}
+const riskColors: Record<string, string> = {
+  Critical: 'var(--error)', High: 'var(--high)', Medium: 'var(--warning)', Low: 'var(--success)'
+}
 
 export default function APIInventory({ onNavigate }: { onNavigate: (page: Page) => void }) {
   const [search, setSearch] = useState('')
   const [riskFilter, setRiskFilter] = useState('All')
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<number | null>(null)
-
-  const apis = apiService.getAllAPIs()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [apis, setApis] = useState<any[]>([])
   const PER = 7
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await apiService.getAllAPIs()
+        setApis(data)
+      } catch (err) {
+        console.error('Failed to load API inventory:', err)
+        setError('Failed to load API inventory. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
   const risks = ['All', 'Critical', 'High', 'Medium', 'Low']
   const filtered = apis.filter(
     (a) => (riskFilter === 'All' || a.riskLabel === riskFilter) && (
@@ -26,6 +49,39 @@ export default function APIInventory({ onNavigate }: { onNavigate: (page: Page) 
   const pages = Math.ceil(filtered.length / PER)
   const paged = filtered.slice((page - 1) * PER, page * PER)
   const detail = apis.find((a) => a.id === selected)
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw size={32} className="animate-spin" style={{ color: 'var(--brand)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>Loading API inventory...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-5 max-w-[1400px]">
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <AlertCircle size={32} style={{ color: 'var(--error)' }} />
+            <p className="text-[14px]" style={{ color: 'var(--text-muted)' }}>{error}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-[12px] text-[13px] font-500 transition-colors"
+              style={{ background: 'var(--brand)', color: 'var(--brand-text)' }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="p-6 space-y-5 max-w-[1400px]">

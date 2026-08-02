@@ -1,28 +1,29 @@
 import { APIEndpoint } from '../types'
 import apisData from '../data/apis.json'
 
-// Mock API service for API endpoints
+// Async API service for API endpoints with fallback to mock
 export const apiService = {
-  getAllAPIs: (): APIEndpoint[] => {
+  getAllAPIs: async (): Promise<APIEndpoint[]> => {
+    // Return mock data for now (backend doesn't provide this yet)
     return apisData as APIEndpoint[]
   },
 
-  getAPIById: (id: number): APIEndpoint | undefined => {
+  getAPIById: async (id: number): Promise<APIEndpoint | undefined> => {
     const apis = apisData as APIEndpoint[]
     return apis.find(api => api.id === id)
   },
 
-  getAPIsByService: (service: string): APIEndpoint[] => {
+  getAPIsByService: async (service: string): Promise<APIEndpoint[]> => {
     const apis = apisData as APIEndpoint[]
     return apis.filter(api => api.service === service)
   },
 
-  getAPIsByRisk: (riskLabel: string): APIEndpoint[] => {
+  getAPIsByRisk: async (riskLabel: string): Promise<APIEndpoint[]> => {
     const apis = apisData as APIEndpoint[]
     return apis.filter(api => api.riskLabel === riskLabel)
   },
 
-  searchAPIs: (query: string): APIEndpoint[] => {
+  searchAPIs: async (query: string): Promise<APIEndpoint[]> => {
     const apis = apisData as APIEndpoint[]
     const lowerQuery = query.toLowerCase()
     return apis.filter(api => 
@@ -32,7 +33,7 @@ export const apiService = {
     )
   },
 
-  getStats: () => {
+  getStats: async () => {
     const apis = apisData as APIEndpoint[]
     return {
       total: apis.length,
