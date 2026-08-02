@@ -4,10 +4,17 @@ from sqlalchemy.orm import sessionmaker
 
 from config import settings
 
-# Create SQLite engine
+# Fix scheme if Railway provides postgres:// instead of postgresql://
+database_url = settings.DATABASE_URL
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+# Only use SQLite-specific args if using SQLite
+connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
+
 engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args={"check_same_thread": False}  # Needed for SQLite
+    database_url,
+    connect_args=connect_args
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
