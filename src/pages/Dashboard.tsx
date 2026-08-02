@@ -813,8 +813,8 @@ return (
         <KPICard 
           id="risk" 
           label="Risk Score" 
-          value={32} 
-          display="3.2" 
+          value={stats?.riskScore || 0}
+          display={stats?.riskScore?.toString() || "0"} 
           sub="Low — within SLA targets" 
           trend="down" 
           trendPct="-5%" 
