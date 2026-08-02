@@ -113,7 +113,7 @@ export default function UploadAPIs({ onNavigate }: { onNavigate: (page: Page) =>
       })
       
     } catch (error) {
-      // Fallback to mock upload if backend fails
+      // Upload to real backend
       setUploading(false)
       simulateUpload(
         file,

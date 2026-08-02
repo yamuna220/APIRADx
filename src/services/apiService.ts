@@ -1,47 +1,57 @@
 import { APIEndpoint } from '../types'
-import apisData from '../data/apis.json'
+import { uploadApi } from './uploadApi'
 
-// Mock API service for API endpoints
 export const apiService = {
-  getAllAPIs: (): APIEndpoint[] => {
-    return apisData as APIEndpoint[]
-  },
-
-  getAPIById: (id: number): APIEndpoint | undefined => {
-    const apis = apisData as APIEndpoint[]
-    return apis.find(api => api.id === id)
-  },
-
-  getAPIsByService: (service: string): APIEndpoint[] => {
-    const apis = apisData as APIEndpoint[]
-    return apis.filter(api => api.service === service)
-  },
-
-  getAPIsByRisk: (riskLabel: string): APIEndpoint[] => {
-    const apis = apisData as APIEndpoint[]
-    return apis.filter(api => api.riskLabel === riskLabel)
-  },
-
-  searchAPIs: (query: string): APIEndpoint[] => {
-    const apis = apisData as APIEndpoint[]
-    const lowerQuery = query.toLowerCase()
-    return apis.filter(api => 
-      api.name.toLowerCase().includes(lowerQuery) || 
-      api.endpoint.toLowerCase().includes(lowerQuery) ||
-      api.service.toLowerCase().includes(lowerQuery)
-    )
-  },
-
-  getStats: () => {
-    const apis = apisData as APIEndpoint[]
+  getAPIData: async () => {
+    const specs = await uploadApi.getSpecs()
+    let allEndpoints: APIEndpoint[] = []
+    
+    for (const spec of specs) {
+        try {
+            const security = await uploadApi.getSecurityAnalysis(spec.id)
+            for (const f of security.findings) {
+                if (f.affectedEndpoint) {
+                    allEndpoints.push({
+                        id: Math.floor(Math.random() * 10000),
+                        name: f.affectedEndpoint,
+                        endpoint: f.affectedEndpoint,
+                        method: f.affectedMethod || 'GET',
+                        service: spec.name,
+                        auth: 'OAuth2',
+                        owner: 'System',
+                        status: f.severity === 'Critical' ? 'Deprecated' : 'Active',
+                        riskLabel: f.severity,
+                        lastScan: spec.uploadedAt
+                    })
+                }
+            }
+            if (allEndpoints.length === 0) {
+                 allEndpoints.push({
+                        id: Math.floor(Math.random() * 10000),
+                        name: spec.name,
+                        endpoint: '/api',
+                        method: 'GET',
+                        service: spec.name,
+                        auth: 'OAuth2',
+                        owner: 'System',
+                        status: 'Active',
+                        riskLabel: 'Low',
+                        lastScan: spec.uploadedAt
+                    })
+            }
+        } catch (e) {}
+    }
     return {
-      total: apis.length,
-      critical: apis.filter(a => a.riskLabel === 'Critical').length,
-      high: apis.filter(a => a.riskLabel === 'High').length,
-      medium: apis.filter(a => a.riskLabel === 'Medium').length,
-      low: apis.filter(a => a.riskLabel === 'Low').length,
-      active: apis.filter(a => a.status === 'Active').length,
-      deprecated: apis.filter(a => a.status === 'Deprecated').length
+        endpoints: allEndpoints,
+        stats: {
+            total: allEndpoints.length,
+            critical: allEndpoints.filter(a => a.riskLabel === 'Critical').length,
+            high: allEndpoints.filter(a => a.riskLabel === 'High').length,
+            medium: allEndpoints.filter(a => a.riskLabel === 'Medium').length,
+            low: allEndpoints.filter(a => a.riskLabel === 'Low').length,
+            active: allEndpoints.filter(a => a.status === 'Active').length,
+            deprecated: allEndpoints.filter(a => a.status === 'Deprecated').length
+        }
     }
   }
 }

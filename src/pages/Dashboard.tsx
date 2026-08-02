@@ -118,7 +118,7 @@ function KPICard({ id, label, value, display, sub, trend, trendPct, color, accen
 }
 
 // ── Donut chart ──────────────────────────────────────────────────
-function DonutChart({ segs }: { segs: any[] }) {
+function DonutChart({ segs, score }: { segs: any[], score: number }) {
   const [hovered, setHovered] = useState<number | null>(null)
   const r = 52, cx = 68, cy = 68, circ = 2 * Math.PI * r, gap = 3
   let off = 0
@@ -137,7 +137,7 @@ function DonutChart({ segs }: { segs: any[] }) {
           <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>284 APIs · API2:2023 top violated</p>
         </div>
         <span className="text-[10px] font-600 px-2 py-1 rounded-full" style={{ background: 'color-mix(in srgb, var(--success) 14%, transparent)', color: 'var(--success)' }}>
-          Score 91/100
+          Score {score}/100
         </span>
       </div>
       <div className="flex items-center gap-5 flex-wrap">
@@ -156,7 +156,7 @@ function DonutChart({ segs }: { segs: any[] }) {
                 />
               )
             })}
-            <text x={cx} y={cy - 7} textAnchor="middle" style={{ fontSize: 'clamp(18px, 5vw, 23px)', fontWeight: 800, fontFamily: 'Alegreya, serif', fill: 'var(--text-primary)' }}>91</text>
+            <text x={cx} y={cy - 7} textAnchor="middle" style={{ fontSize: 'clamp(18px, 5vw, 23px)', fontWeight: 800, fontFamily: 'Alegreya, serif', fill: 'var(--text-primary)' }}>{score}</text>
             <text x={cx} y={cy + 10} textAnchor="middle" style={{ fontSize: 'clamp(8px, 2vw, 10px)', fontFamily: 'Alegreya, serif', fill: 'var(--text-muted)' }}>Score</text>
             {hovered !== null && (
               <text x={cx} y={cy + 26} textAnchor="middle" style={{ fontSize: 'clamp(7px, 1.5vw, 9px)', fontFamily: 'Alegreya, serif', fill: arcs[hovered].color }}>
@@ -191,7 +191,7 @@ function DonutChart({ segs }: { segs: any[] }) {
 }
 
 // ── Risk trend area chart ─────────────────────────────────────────
-function RiskTrend({ trendData }: { trendData: any[] }) {
+function RiskTrend({ trendData, score }: { trendData: any[], score: number }) {
   const [tooltip, setTooltip] = useState<{ x: number; y: number; v: number; label: string } | null>(null)
   const [timeRange, setTimeRange] = useState<'3m' | '6m' | '12m'>('12m')
   const [zoom, setZoom] = useState(1)
@@ -260,7 +260,7 @@ function RiskTrend({ trendData }: { trendData: any[] }) {
         </div>
       </div>
       <div className="text-right mb-2">
-        <div className="text-[30px] font-800 leading-none" style={{ color: 'var(--success)' }}>{filteredData.at(-1)?.value || 91}</div>
+        <div className="text-[30px] font-800 leading-none" style={{ color: 'var(--success)' }}>{score}</div>
         <div className="flex items-center gap-1 mt-1 justify-end" style={{ color: 'var(--success)' }}>
           <TrendingUp size={10} /><span className="text-[10px]">+33 pts YoY</span>
         </div>
@@ -582,7 +582,7 @@ function ActivityTimeline({ timeline, onNavigate }: { timeline: any[]; onNavigat
 }
 
 // ── Upload mini card ──────────────────────────────────────────────
-function UploadCard({ uploadHistory }: { uploadHistory: any[] }) {
+function UploadCard({ uploadHistory, onUpload }: { uploadHistory: any[], onUpload: () => void }) {
   const [drag, setDrag] = useState(false)
   return (
     <div style={card} className="p-5">
@@ -591,6 +591,7 @@ function UploadCard({ uploadHistory }: { uploadHistory: any[] }) {
         onDragOver={(e) => { e.preventDefault(); setDrag(true) }}
         onDragLeave={() => setDrag(false)}
         onDrop={(e) => { e.preventDefault(); setDrag(false) }}
+        onClick={onUpload}
         className="flex flex-col items-center py-7 rounded-[14px] border-2 border-dashed cursor-pointer transition-all mb-4"
         style={{ borderColor: drag ? 'var(--brand)' : 'var(--border)', background: drag ? 'color-mix(in srgb, var(--brand) 6%, transparent)' : 'var(--bg-secondary)' }}
       >
@@ -626,7 +627,7 @@ function UploadCard({ uploadHistory }: { uploadHistory: any[] }) {
 }
 
 // ── Hero section ────────────────────────────────────────────────────
-function Hero({ onScan, onUpload, onNavigate }: { onScan: () => void; onUpload: () => void; onNavigate: (page: Page) => void }) {
+function Hero({ onScan, onUpload, onNavigate, stats }: { onScan: () => void; onUpload: () => void; onNavigate: (page: Page) => void, stats: any }) {
   const { user } = useUser()
   const [scanning, setScanning] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -688,9 +689,9 @@ function Hero({ onScan, onUpload, onNavigate }: { onScan: () => void; onUpload: 
 
             <div className="flex items-center gap-5 mt-4">
               {[
-                { label: '284 APIs', sub: 'Monitored', color: 'var(--info)' },
-                { label: '12 Critical', sub: 'Need attention', color: 'var(--error)' },
-                { label: 'Score 91', sub: 'Security grade', color: 'var(--success)' },
+                { label: `${stats?.totalAPIs || 0} APIs`, sub: 'Monitored', color: 'var(--info)' },
+                { label: `${stats?.criticalIssues || 0} Critical`, sub: 'Need attention', color: 'var(--error)' },
+                { label: `Score ${stats?.securityScore || 0}`, sub: 'Security grade', color: 'var(--success)' },
               ].map((m) => (
                 <div key={m.label}>
                   <div className="text-[18px] font-800 leading-none" style={{ color: m.color }}>{m.label}</div>
@@ -737,32 +738,33 @@ function Hero({ onScan, onUpload, onNavigate }: { onScan: () => void; onUpload: 
 
 // ── Main Dashboard ───────────────────────────────────────────────
 
+
 export default function Dashboard({ onNavigate }: { onNavigate: (page: Page) => void }) {
   const { uploadedSpecs, getTotalEndpoints, getTotalRisks } = useUploads()
-  const kpiSparkData = dashboardService.getKPISparkData()
-  const owaspDistribution = dashboardService.getOWASPDistribution()
-  const trendData = dashboardService.getTrendData()
-  const recentAnalysis = dashboardService.getRecentAnalysis()
-  const vulnerableAPIs = dashboardService.getVulnerableAPIs()
-  const aiInsights = dashboardService.getAIInsights()
-  const activityTimeline = dashboardService.getActivityTimeline()
-  const uploadHistory = dashboardService.getUploadHistory()
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<any>(null)
+
+  useEffect(() => {
+    dashboardService.getDashboardData().then(res => {
+        setData(res)
+        setLoading(false)
+    })
+  }, [uploadedSpecs])
   
-  // Calculate metrics including uploaded specs
-  const baseAPIs = 284
-  const uploadedEndpoints = getTotalEndpoints()
-  const totalAPIs = baseAPIs + uploadedEndpoints
-  const baseCritical = 12
-  const uploadedRisks = getTotalRisks()
-  const totalCritical = baseCritical + uploadedRisks
-  
-  const handleUpload = () => {
-    onNavigate('upload-apis')
+  if (loading || !data) {
+      return <div className="p-6">Loading dashboard data from real backend...</div>
   }
   
-  return (
+  const kpiSparkData = dashboardService.getKPISparkData()
+  const { stats, owaspDistribution, vulnerableAPIs, recentAnalysis, aiInsights, uploadHistory, activityTimeline } = data
+  const trendData = [] // Implement trend if needed
+  
+  const totalAPIs = stats.totalAPIs
+  const totalCritical = stats.criticalIssues
+  const handleUpload = () => onNavigate('upload-apis')
+return (
     <div className="p-6 space-y-5 max-w-[1400px]">
-      <Hero onScan={() => {}} onUpload={handleUpload} onNavigate={onNavigate} />
+      <Hero onScan={() => {}} onUpload={handleUpload} onNavigate={onNavigate} stats={stats} />
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -797,7 +799,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (page: Page) => 
         <KPICard 
           id="score" 
           label="Security Score" 
-          value={91} 
+          value={stats.securityScore || 91} 
           sub="↑ 3 pts from last scan" 
           trend="up" 
           trendPct="+3.4%" 
@@ -827,8 +829,8 @@ export default function Dashboard({ onNavigate }: { onNavigate: (page: Page) => 
 
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2"><RiskTrend trendData={trendData} /></div>
-        <DonutChart segs={owaspDistribution} />
+        <div className="lg:col-span-2"><RiskTrend trendData={trendData} score={stats.securityScore || 0} /></div>
+        <DonutChart segs={owaspDistribution} score={stats.securityScore || 0} />
       </div>
 
       {/* Table */}
@@ -836,7 +838,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (page: Page) => 
 
       {/* Bottom row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <UploadCard uploadHistory={uploadHistory} />
+        <UploadCard uploadHistory={uploadHistory} onUpload={handleUpload} />
         <MostVulnerable vuln={vulnerableAPIs} />
         <AIInsights insights={aiInsights} onNavigate={onNavigate} />
       </div>

@@ -122,7 +122,7 @@ export default function ForgotPassword({ onBack, isDark, onToggleDark }: Props) 
                   <label className="block text-[12px] font-500 mb-1.5" style={{ color: 'var(--text-secondary)' }}>Work Email</label>
                   <input
                     type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                    placeholder="jordan@company.com" required
+                    placeholder="user@example.com" required
                     className="w-full px-4 py-3 text-[14px] rounded-[14px] border focus:outline-none transition-all"
                     style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                     onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--brand)')}
