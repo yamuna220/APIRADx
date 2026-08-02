@@ -18,7 +18,11 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS
-    CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:8443"]
+    CORS_ORIGINS: list = [
+        "http://localhost:5173", 
+        "http://localhost:8443", 
+        "https://yamuna220.github.io"
+    ]
     
     # File Upload
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
@@ -41,7 +45,7 @@ class Settings(BaseSettings):
     PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 30
     
     # Frontend URL for email links
-    FRONTEND_URL: str = "http://localhost:8443"
+    FRONTEND_URL: str = "https://yamuna220.github.io/APIRADx"
     
     # AI Provider (for future OpenAI/Claude integration)
     AI_PROVIDER: str = "mock"
