@@ -1,6 +1,7 @@
 import { uploadApi } from './uploadApi'
 
 export const riskAssessmentService = {
+  getHeatmap: () => { return [] },
   getRiskData: async () => {
     const specs = await uploadApi.getSpecs()
     let data = {

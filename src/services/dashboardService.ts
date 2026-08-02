@@ -23,7 +23,12 @@ export const dashboardService = {
   },
 
   getDashboardData: async () => {
-    const specs = await uploadApi.getSpecs()
+    let specs = []
+    try {
+        specs = await uploadApi.getSpecs()
+    } catch (err) {
+        console.error("Backend fetch failed, using fallback:", err)
+    }
     
     let totalCritical = 0
     let totalHigh = 0

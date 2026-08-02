@@ -748,7 +748,7 @@ export default function Dashboard({ onNavigate }: { onNavigate: (page: Page) => 
     dashboardService.getDashboardData().then(res => {
         setData(res)
         setLoading(false)
-    })
+    }).catch(() => setLoading(false))
   }, [uploadedSpecs])
   
   if (loading || !data) {
