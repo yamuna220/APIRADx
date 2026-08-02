@@ -3,27 +3,27 @@ import apisData from '../data/apis.json'
 
 // Async API service for API endpoints with fallback to mock
 export const apiService = {
-  getAllAPIs: async (): Promise<APIEndpoint[]> => {
+  getAllAPIs: (): APIEndpoint[] => {
     // Return mock data for now (backend doesn't provide this yet)
     return apisData as APIEndpoint[]
   },
 
-  getAPIById: async (id: number): Promise<APIEndpoint | undefined> => {
+  getAPIById: (id: number): APIEndpoint | undefined => {
     const apis = apisData as APIEndpoint[]
     return apis.find(api => api.id === id)
   },
 
-  getAPIsByService: async (service: string): Promise<APIEndpoint[]> => {
+  getAPIsByService: (service: string): APIEndpoint[] => {
     const apis = apisData as APIEndpoint[]
     return apis.filter(api => api.service === service)
   },
 
-  getAPIsByRisk: async (riskLabel: string): Promise<APIEndpoint[]> => {
+  getAPIsByRisk: (riskLabel: string): APIEndpoint[] => {
     const apis = apisData as APIEndpoint[]
     return apis.filter(api => api.riskLabel === riskLabel)
   },
 
-  searchAPIs: async (query: string): Promise<APIEndpoint[]> => {
+  searchAPIs: (query: string): APIEndpoint[] => {
     const apis = apisData as APIEndpoint[]
     const lowerQuery = query.toLowerCase()
     return apis.filter(api => 
@@ -33,7 +33,7 @@ export const apiService = {
     )
   },
 
-  getStats: async () => {
+  getStats: () => {
     const apis = apisData as APIEndpoint[]
     return {
       total: apis.length,

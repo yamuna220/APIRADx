@@ -3,6 +3,10 @@ import uploadsData from '../data/uploads.json'
 
 // Mock service for upload history
 export const uploadService = {
+  getUploadHistory: (): UploadHistory[] => {
+    return uploadsData as UploadHistory[]
+  },
+
   getAllUploads: (): UploadHistory[] => {
     return uploadsData as UploadHistory[]
   },
