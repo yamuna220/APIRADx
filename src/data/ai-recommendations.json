@@ -1,0 +1,29 @@
+[
+  {
+    "title": "Missing rate limiting on auth endpoint",
+    "severity": "Critical",
+    "priority": "P0",
+    "reduction": "71%",
+    "explanation": "The /api/v2/users/auth endpoint has no rate limiting, enabling brute-force and credential stuffing attacks.",
+    "fix": "Implement Redis-backed rate limiter: max 5 requests/minute per IP with exponential backoff.",
+    "snippet": "app.post('/auth', rateLimit({ windowMs: 60000, max: 5 }), handler);"
+  },
+  {
+    "title": "Unauthenticated analytics export",
+    "severity": "Critical",
+    "priority": "P0",
+    "reduction": "68%",
+    "explanation": "The /api/v3/analytics/export route returns full dataset without requiring auth headers.",
+    "fix": "Add JWT auth middleware and validate \"analytics:read\" scope before processing.",
+    "snippet": "app.get('/analytics/export', validateJWT('analytics:read'), handler);"
+  },
+  {
+    "title": "API key in query string",
+    "severity": "High",
+    "priority": "P1",
+    "reduction": "45%",
+    "explanation": "API keys are passed as URL query parameters, exposing them in logs and browser history.",
+    "fix": "Move to Authorization header using Bearer scheme. Update all client SDKs.",
+    "snippet": "// Before: /payments?api_key=xyz\n// After: Authorization: Bearer xyz"
+  }
+]

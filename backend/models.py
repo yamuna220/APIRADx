@@ -1,36 +1,7 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Float, Boolean, JSON, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, DateTime, Text, Float, Boolean, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
-
-
-# Workspace Members Association Table
-workspace_members = Table(
-    "workspace_members",
-    Base.metadata,
-    Column("workspace_id", Integer, ForeignKey("workspaces.id"), primary_key=True),
-    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
-    Column("role", String, default="member")  # admin, member, viewer
-)
-
-
-class Workspace(Base):
-    __tablename__ = "workspaces"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    organization = Column(String)
-    settings = Column(JSON, default={})
-    api_limits = Column(Integer, default=100)
-    
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    members = relationship("User", secondary=workspace_members, back_populates="workspaces")
-    api_specs = relationship("APISpec", back_populates="workspace", cascade="all, delete-orphan")
-    reports = relationship("Report", back_populates="workspace", cascade="all, delete-orphan")
-    notifications = relationship("Notification", back_populates="workspace", cascade="all, delete-orphan")
 
 
 class User(Base):
@@ -51,12 +22,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_login = Column(DateTime)
     
-    active_workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True)
-    
     # Relationships
-    # Relationships
-    workspaces = relationship("Workspace", secondary=workspace_members, back_populates="members")
-    active_workspace = relationship("Workspace", foreign_keys=[active_workspace_id])
     api_specs = relationship("APISpec", back_populates="owner")
     verification_tokens = relationship("VerificationToken", back_populates="user", cascade="all, delete-orphan")
     password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
@@ -80,9 +46,6 @@ class APISpec(Base):
     
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="api_specs")
-    
-    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True)
-    workspace = relationship("Workspace", back_populates="api_specs")
     
     # Analysis results
     endpoints_count = Column(Integer, default=0)
@@ -192,19 +155,12 @@ class Report(Base):
     id = Column(Integer, primary_key=True, index=True)
     api_spec_id = Column(Integer, ForeignKey("api_specs.id"))
     api_spec = relationship("APISpec", back_populates="reports")
-    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True)
-    workspace = relationship("Workspace", back_populates="reports")
     
     # Report details
-    title = Column(String)
-    report_id = Column(String, unique=True, index=True)
-    scan_id = Column(String)
     report_type = Column(String)  # executive, technical, audit, compliance
     format = Column(String)  # pdf, csv
     file_path = Column(String)
     file_name = Column(String)
-    pdf_path = Column(String)
-    csv_path = Column(String)
     
     # Report content (stored as JSON for flexibility)
     content = Column(JSON)
@@ -275,19 +231,4 @@ class AuditLog(Base):
     user_agent = Column(String)
     details = Column(JSON)  # Additional context
     timestamp = Column(DateTime, default=datetime.utcnow)
-
-
-class Notification(Base):
-    __tablename__ = "notifications"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True)
-    workspace = relationship("Workspace", back_populates="notifications")
-    
-    title = Column(String, nullable=False)
-    message = Column(Text)
-    type = Column(String)  # info, warning, error, success
-    is_read = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
 

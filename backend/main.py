@@ -8,16 +8,11 @@ import os
 import uuid
 
 from database import get_db, engine, Base
-from models import (
-    User, APISpec, SecurityAnalysis, RiskAssessment, DependencyGraph, 
-    AIRecommendation, Report, VerificationToken, PasswordResetToken, AuditLog,
-    Workspace, workspace_members, Notification
-)
+from models import User, APISpec, SecurityAnalysis, RiskAssessment, DependencyGraph, AIRecommendation, Report, VerificationToken, PasswordResetToken, AuditLog
 from schemas import (
     UserCreate, UserResponse, UserUpdate, Token, APISpecUploadResponse, SecurityAnalysisResponse,
     RiskScoreResponse, DependencyGraphResponse, AIRecommendationResponse, ReportResponse,
-    LegacyUploadHistory, DashboardStats, ForgotPasswordRequest, ResetPasswordRequest,
-    WorkspaceCreate, WorkspaceResponse
+    LegacyUploadHistory, DashboardStats, ForgotPasswordRequest, ResetPasswordRequest
 )
 from auth import (
     get_password_hash, authenticate_user, create_access_token, get_current_active_user,
@@ -27,7 +22,7 @@ from auth import (
 from config import settings
 from utils import (
     parse_openapi_spec, count_endpoints, format_file_size, time_ago,
-    analyze_security_engine, assess_risk_engine, generate_dependency_graph_engine, generate_ai_recommendation_engine
+    analyze_security_mock, assess_risk_mock, generate_dependency_graph_mock, generate_ai_recommendation_mock
 )
 from email_service import send_verification_email, send_password_reset_email
 
@@ -75,16 +70,6 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    
-    # Create default workspace for new user
-    default_workspace = Workspace(name=f"{user.username}'s Workspace", organization=user.organization)
-    db.add(default_workspace)
-    db.commit()
-    db.refresh(default_workspace)
-    
-    db.execute(workspace_members.insert().values(workspace_id=default_workspace.id, user_id=db_user.id, role="admin"))
-    db_user.active_workspace_id = default_workspace.id
-    db.commit()
     
     # Generate verification token
     verification_token = generate_verification_token()
@@ -328,39 +313,12 @@ def update_users_me(
         current_user.organization = user_update.organization
     if user_update.profile_image is not None:
         current_user.profile_image = user_update.profile_image
-    if user_update.active_workspace_id is not None:
-        current_user.active_workspace_id = user_update.active_workspace_id
     
     current_user.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(current_user)
     
     return current_user
-
-
-# ── Workspace Endpoints ───────────────────────────────────────────
-
-@app.get("/api/workspaces", response_model=List[WorkspaceResponse])
-def get_workspaces(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    """Get all workspaces the user belongs to."""
-    return current_user.workspaces
-
-
-@app.post("/api/workspaces", response_model=WorkspaceResponse)
-def create_workspace(workspace: WorkspaceCreate, current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
-    """Create a new workspace."""
-    db_workspace = Workspace(name=workspace.name, organization=workspace.organization, settings=workspace.settings, api_limits=workspace.api_limits)
-    db.add(db_workspace)
-    db.commit()
-    db.refresh(db_workspace)
-    
-    db.execute(workspace_members.insert().values(workspace_id=db_workspace.id, user_id=current_user.id, role="admin"))
-    
-    if current_user.active_workspace_id is None:
-        current_user.active_workspace_id = db_workspace.id
-        
-    db.commit()
-    return db_workspace
 
 
 # ── API Spec Upload and Parsing Endpoints ───────────────────────────────
@@ -405,15 +363,14 @@ async def upload_spec(
         parsed_content=parsed_spec,
         endpoints_count=endpoints_count,
         status="parsed",
-        owner_id=current_user.id,
-        workspace_id=current_user.active_workspace_id
+        owner_id=current_user.id
     )
     db.add(db_spec)
     db.commit()
     db.refresh(db_spec)
     
     # Run security analysis
-    security_result = analyze_security_engine(parsed_spec, str(db_spec.id))
+    security_result = analyze_security_mock(parsed_spec, str(db_spec.id))
     db_security = SecurityAnalysis(
         api_spec_id=db_spec.id,
         total_findings=security_result["summary"]["totalFindings"],
@@ -426,7 +383,7 @@ async def upload_spec(
     db.add(db_security)
     
     # Run risk assessment
-    risk_result = assess_risk_engine(parsed_spec, security_result["findings"])
+    risk_result = assess_risk_mock(parsed_spec, security_result["findings"])
     db_risk = RiskAssessment(
         api_spec_id=db_spec.id,
         overall_score=risk_result["overallScore"],
@@ -438,7 +395,7 @@ async def upload_spec(
     db.add(db_risk)
     
     # Generate dependency graph
-    graph_result = generate_dependency_graph_engine(parsed_spec)
+    graph_result = generate_dependency_graph_mock(parsed_spec)
     db_graph = DependencyGraph(
         api_spec_id=db_spec.id,
         nodes=graph_result["nodes"],
@@ -482,7 +439,7 @@ def get_specs(
 ):
     """Get all uploaded specs (legacy format for frontend compatibility)."""
     specs = db.query(APISpec).filter(
-        APISpec.workspace_id == current_user.active_workspace_id
+        APISpec.owner_id == current_user.id
     ).order_by(APISpec.created_at.desc()).offset(skip).limit(limit).all()
     
     # Convert to legacy format
@@ -513,7 +470,7 @@ def get_spec(
     """Get a specific spec by ID."""
     spec = db.query(APISpec).filter(
         APISpec.id == spec_id,
-        APISpec.workspace_id == current_user.active_workspace_id
+        APISpec.owner_id == current_user.id
     ).first()
     
     if not spec:
@@ -545,7 +502,7 @@ def delete_spec(
     """Delete a spec by ID."""
     spec = db.query(APISpec).filter(
         APISpec.id == spec_id,
-        APISpec.workspace_id == current_user.active_workspace_id
+        APISpec.owner_id == current_user.id
     ).first()
     
     if not spec:
@@ -568,7 +525,7 @@ def get_security_analysis(
     """Get security analysis for a spec."""
     spec = db.query(APISpec).filter(
         APISpec.id == spec_id,
-        APISpec.workspace_id == current_user.active_workspace_id
+        APISpec.owner_id == current_user.id
     ).first()
     
     if not spec:
@@ -605,7 +562,7 @@ def get_risk_assessment(
     """Get risk assessment for a spec."""
     spec = db.query(APISpec).filter(
         APISpec.id == spec_id,
-        APISpec.workspace_id == current_user.active_workspace_id
+        APISpec.owner_id == current_user.id
     ).first()
     
     if not spec:
@@ -636,7 +593,7 @@ def get_dependency_graph(
     """Get dependency graph for a spec."""
     spec = db.query(APISpec).filter(
         APISpec.id == spec_id,
-        APISpec.workspace_id == current_user.active_workspace_id
+        APISpec.owner_id == current_user.id
     ).first()
     
     if not spec:
@@ -672,7 +629,7 @@ def get_ai_recommendations(
     """Get AI recommendations for a spec."""
     spec = db.query(APISpec).filter(
         APISpec.id == spec_id,
-        APISpec.workspace_id == current_user.active_workspace_id
+        APISpec.owner_id == current_user.id
     ).first()
     
     if not spec:
@@ -686,7 +643,7 @@ def get_ai_recommendations(
     # Generate recommendations for each finding
     recommendations = []
     for finding in security.findings[:5]:  # Limit to top 5 findings
-        rec = generate_ai_recommendation_engine(finding)
+        rec = generate_ai_recommendation_mock(finding)
         recommendations.append(AIRecommendationResponse(**rec))
     
     return recommendations
@@ -705,7 +662,7 @@ def generate_report(
     """Generate a report for a spec."""
     spec = db.query(APISpec).filter(
         APISpec.id == spec_id,
-        APISpec.workspace_id == current_user.active_workspace_id
+        APISpec.owner_id == current_user.id
     ).first()
     
     if not spec:
@@ -718,7 +675,6 @@ def generate_report(
         report_type=report_type,
         format=format,
         report_id=report_id,
-        workspace_id=current_user.active_workspace_id,
         content={"status": "generated", "spec_id": spec_id}
     )
     db.add(db_report)
@@ -742,7 +698,7 @@ def get_dashboard_stats(
     db: Session = Depends(get_db)
 ):
     """Get dashboard statistics."""
-    specs = db.query(APISpec).filter(APISpec.workspace_id == current_user.active_workspace_id).all()
+    specs = db.query(APISpec).filter(APISpec.owner_id == current_user.id).all()
     
     total_apis = len(specs)
     total_endpoints = sum(spec.endpoints_count for spec in specs)

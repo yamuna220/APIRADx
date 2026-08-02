@@ -19,7 +19,7 @@ export default function Login({ onLogin, isDark, onToggleDark, onNavigate }: Pro
     setLoading(true)
 
     try {
-      // Call real backend login
+      // Mock login for demo purposes since backend is not deployed
       await new Promise(resolve => setTimeout(resolve, 800))
       // await authApi.login(email, password)
       addNotification({
@@ -139,7 +139,7 @@ export default function Login({ onLogin, isDark, onToggleDark, onNavigate }: Pro
               <label className="block text-[12px] font-500 mb-1.5" style={{ color: 'var(--text-secondary)' }}>Work email</label>
               <input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@example.com" required
+                placeholder="jordan@company.com" required
                 className="w-full px-4 py-3 text-[14px] rounded-[14px] border focus:outline-none transition-all"
                 style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--brand)')}

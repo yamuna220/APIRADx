@@ -160,7 +160,7 @@ export default function Register({ onRegisterSuccess, isDark, onToggleDark }: Pr
               <label className="block text-[12px] font-500 mb-1.5" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
               <input
                 type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
-                placeholder="User Name" required
+                placeholder="Jordan Davis" required
                 className="w-full px-4 py-3 text-[14px] rounded-[14px] border focus:outline-none transition-all"
                 style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--brand)')}
@@ -172,7 +172,7 @@ export default function Register({ onRegisterSuccess, isDark, onToggleDark }: Pr
               <label className="block text-[12px] font-500 mb-1.5" style={{ color: 'var(--text-secondary)' }}>Organization</label>
               <input
                 type="text" value={organization} onChange={(e) => setOrganization(e.target.value)}
-                placeholder="Your Company" required
+                placeholder="Acme Corp" required
                 className="w-full px-4 py-3 text-[14px] rounded-[14px] border focus:outline-none transition-all"
                 style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--brand)')}
@@ -184,7 +184,7 @@ export default function Register({ onRegisterSuccess, isDark, onToggleDark }: Pr
               <label className="block text-[12px] font-500 mb-1.5" style={{ color: 'var(--text-secondary)' }}>Work Email</label>
               <input
                 type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                placeholder="user@example.com" required
+                placeholder="jordan@company.com" required
                 className="w-full px-4 py-3 text-[14px] rounded-[14px] border focus:outline-none transition-all"
                 style={{ background: 'var(--card)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--brand)')}

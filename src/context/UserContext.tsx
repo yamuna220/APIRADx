@@ -19,7 +19,7 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
-const defaultSettings: UserSettings = {
+const mockSettings: UserSettings = {
   profile: {
     fullName: '',
     email: '',

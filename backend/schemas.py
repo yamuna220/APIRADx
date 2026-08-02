@@ -3,31 +3,12 @@ from typing import Optional, List, Any, Dict
 from datetime import datetime
 
 
-# Workspace Schemas
-class WorkspaceBase(BaseModel):
-    name: str
-    organization: Optional[str] = None
-    settings: Optional[Dict[str, Any]] = {}
-    api_limits: Optional[int] = 100
-
-class WorkspaceCreate(WorkspaceBase):
-    pass
-
-class WorkspaceResponse(WorkspaceBase):
-    id: int
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
-
 # User Schemas
 class UserBase(BaseModel):
     email: EmailStr
     username: str
     full_name: Optional[str] = None
     organization: Optional[str] = None
-    active_workspace_id: Optional[int] = None
 
 
 class UserCreate(UserBase):
@@ -38,7 +19,6 @@ class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     organization: Optional[str] = None
     profile_image: Optional[str] = None
-    active_workspace_id: Optional[int] = None
 
 
 class UserResponse(UserBase):
@@ -55,7 +35,6 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
     last_login: Optional[datetime]
-    active_workspace_id: Optional[int]
     
     class Config:
         from_attributes = True
@@ -86,7 +65,6 @@ class APISpecBase(BaseModel):
     name: str
     version: Optional[str] = None
     description: Optional[str] = None
-    workspace_id: Optional[int] = None
 
 
 class APISpecCreate(APISpecBase):

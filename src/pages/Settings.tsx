@@ -49,11 +49,11 @@ function WorkspaceTab() {
   const { addNotification } = useNotifications()
   const [workspaceName, setWorkspaceName] = useState(() => {
     const saved = localStorage.getItem('apiradx-workspace-name')
-    return saved || 'Your Company'
+    return saved || 'Acme Corp'
   })
   const [organization, setOrganization] = useState(() => {
     const saved = localStorage.getItem('apiradx-organization')
-    return saved || 'Your Company'
+    return saved || 'Acme Corporation'
   })
   const [description, setDescription] = useState(() => {
     const saved = localStorage.getItem('apiradx-description')
@@ -101,8 +101,8 @@ function WorkspaceTab() {
 
   // Track unsaved changes
   useEffect(() => {
-    const savedWorkspaceName = localStorage.getItem('apiradx-workspace-name') || 'Your Company'
-    const savedOrganization = localStorage.getItem('apiradx-organization') || 'Your Company'
+    const savedWorkspaceName = localStorage.getItem('apiradx-workspace-name') || 'Acme Corp'
+    const savedOrganization = localStorage.getItem('apiradx-organization') || 'Acme Corporation'
     const savedDescription = localStorage.getItem('apiradx-description') || 'Enterprise API security management'
     const savedTimezone = localStorage.getItem('apiradx-timezone') || 'UTC'
     const savedDefaultTheme = localStorage.getItem('apiradx-default-theme') || 'light'
@@ -355,7 +355,7 @@ function TeamTab() {
       return JSON.parse(saved)
     }
     return [
-      { name: 'Jordan Smith', email: 'user@example.com', role: 'Owner', initials: 'JS', color: 'var(--brand)' },
+      { name: 'Jordan Smith', email: 'jordan@acme.com', role: 'Owner', initials: 'JS', color: 'var(--brand)' },
       { name: 'Alex Chen', email: 'alex@acme.com', role: 'Admin', initials: 'AC', color: 'var(--info)' },
       { name: 'Sarah Miller', email: 'sarah@acme.com', role: 'Member', initials: 'SM', color: 'var(--success)' },
     ]
@@ -515,7 +515,7 @@ function NotificationsTab() {
     { key: 'med', label: 'Medium findings', sub: 'CVSS 4.0–6.9' },
     { key: 'weekly', label: 'Weekly digest', sub: 'Every Monday 9AM' },
     { key: 'scan', label: 'Scan completed', sub: 'Notify on finish' },
-    { key: 'email', label: 'Email delivery', sub: 'user@example.com' },
+    { key: 'email', label: 'Email delivery', sub: 'jordan@acme.com' },
     { key: 'slack', label: 'Slack delivery', sub: '#security-alerts' },
   ]
   return (

@@ -2,6 +2,7 @@
 // Simulates FastAPI backend endpoints for report management
 
 import { Report } from '../types'
+import reportsData from '../data/reports.json'
 import { exportReport } from '../utils/reportGenerator'
 
 export interface ReportShareOptions {
@@ -31,7 +32,7 @@ export interface APIResponse<T> {
 }
 
 // Simulated database
-let reportsDatabase: Report[] = []
+let reportsDatabase = [...(reportsData as Report[])]
 let shareLinks: Map<string, ShareLinkResponse> = new Map()
 
 // Helper function to simulate network delay

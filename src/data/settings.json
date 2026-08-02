@@ -1,0 +1,55 @@
+{
+  "teamMembers": [
+    {
+      "name": "Jordan Davis",
+      "email": "jordan@acme.com",
+      "role": "Admin",
+      "initials": "JD",
+      "color": "var(--brand)"
+    },
+    {
+      "name": "Alex Kim",
+      "email": "alex@acme.com",
+      "role": "Security Engineer",
+      "initials": "AK",
+      "color": "var(--info)"
+    },
+    {
+      "name": "Morgan Lee",
+      "email": "morgan@acme.com",
+      "role": "Developer",
+      "initials": "ML",
+      "color": "var(--success)"
+    },
+    {
+      "name": "Sam Rivera",
+      "email": "sam@acme.com",
+      "role": "Analyst",
+      "initials": "SR",
+      "color": "#A78BFA"
+    }
+  ],
+  "apiKeys": [
+    {
+      "id": "1",
+      "name": "Production API Key",
+      "prefix": "radx_prod_",
+      "created": "Jul 1, 2026",
+      "lastUsed": "2 min ago"
+    },
+    {
+      "id": "2",
+      "name": "CI/CD Pipeline Key",
+      "prefix": "radx_ci_",
+      "created": "Jun 15, 2026",
+      "lastUsed": "1 hr ago"
+    },
+    {
+      "id": "3",
+      "name": "Development Key",
+      "prefix": "radx_dev_",
+      "created": "May 10, 2026",
+      "lastUsed": "3 days ago"
+    }
+  ]
+}

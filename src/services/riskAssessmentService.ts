@@ -1,23 +1,42 @@
-import { uploadApi } from './uploadApi'
+import { RiskHeatmapRow } from '../types'
+import riskAssessmentData from '../data/risk-assessment.json'
 
+// Mock service for risk assessment data
 export const riskAssessmentService = {
-  getHeatmap: () => { return [] },
-  getRiskData: async () => {
-    const specs = await uploadApi.getSpecs()
-    let data = {
-        totalScore: 91,
-        grade: 'A',
-        factors: [] as any[],
-        matrix: [] as any[]
+  getHeatmap: (): RiskHeatmapRow[] => {
+    return riskAssessmentData.heatmap as RiskHeatmapRow[]
+  },
+
+  getTopVulnerable: () => {
+    return riskAssessmentData.topVulnerable
+  },
+
+  getTrendPoints: (): number[] => {
+    return riskAssessmentData.trendPoints
+  },
+
+  getTrendMonths: (): string[] => {
+    return riskAssessmentData.trendMonths
+  },
+
+  getRiskContributors: () => {
+    return riskAssessmentData.riskContributors
+  },
+
+  getBusinessImpact: () => {
+    return riskAssessmentData.businessImpact
+  },
+
+  getStats: () => {
+    const heatmap = riskAssessmentData.heatmap as RiskHeatmapRow[]
+    return {
+      totalServices: heatmap.length,
+      totalCritical: heatmap.reduce((sum, row) => sum + row.critical, 0),
+      totalHigh: heatmap.reduce((sum, row) => sum + row.high, 0),
+      totalMedium: heatmap.reduce((sum, row) => sum + row.medium, 0),
+      totalLow: heatmap.reduce((sum, row) => sum + row.low, 0),
+      currentScore: riskAssessmentData.trendPoints[riskAssessmentData.trendPoints.length - 1],
+      scoreChange: riskAssessmentData.trendPoints[riskAssessmentData.trendPoints.length - 1] - riskAssessmentData.trendPoints[0]
     }
-    // We can add actual backend fetch if needed, but returning static layout with dynamic data.
-    if (specs.length > 0) {
-        try {
-            const risk = await uploadApi.getRiskAssessment(specs[0].id)
-            data.totalScore = risk.riskScore
-            data.grade = risk.grade
-        } catch (e) {}
-    }
-    return data
   }
 }

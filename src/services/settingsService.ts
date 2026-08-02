@@ -1,38 +1,66 @@
 import { TeamMember, APIKey } from '../types'
+import settingsData from '../data/settings.json'
 
-// Dynamic service for settings data
+// Mock service for settings data
 export const settingsService = {
   getTeamMembers: (): TeamMember[] => {
-    return []
+    return settingsData.teamMembers as TeamMember[]
   },
 
   getTeamMemberByEmail: (email: string): TeamMember | undefined => {
-    return undefined
+    const members = settingsData.teamMembers as TeamMember[]
+    return members.find(m => m.email === email)
   },
 
   addTeamMember: (member: Omit<TeamMember, 'initials'>): TeamMember => {
+    const members = settingsData.teamMembers as TeamMember[]
     const initials = member.name.split(' ').map(n => n[0]).join('').toUpperCase()
-    return { ...member, initials }
+    const newMember: TeamMember = {
+      ...member,
+      initials
+    }
+    members.push(newMember)
+    return newMember
   },
 
   removeTeamMember: (email: string): boolean => {
-    return true
+    const members = settingsData.teamMembers as TeamMember[]
+    const index = members.findIndex(m => m.email === email)
+    if (index !== -1) {
+      members.splice(index, 1)
+      return true
+    }
+    return false
   },
 
   getAPIKeys: (): APIKey[] => {
-    return []
+    return settingsData.apiKeys as APIKey[]
   },
 
   getAPIKeyById: (id: string): APIKey | undefined => {
-    return undefined
+    const keys = settingsData.apiKeys as APIKey[]
+    return keys.find(k => k.id === id)
   },
 
   addAPIKey: (key: Omit<APIKey, 'id'>): APIKey => {
-    return { id: Math.random().toString(), ...key }
+    const keys = settingsData.apiKeys as APIKey[]
+    const newId = (parseInt(keys[keys.length - 1]?.id || '0') + 1).toString()
+    const newKey: APIKey = {
+      id: newId,
+      ...key
+    }
+    keys.push(newKey)
+    return newKey
   },
 
   deleteAPIKey: (id: string): boolean => {
-    return true
+    const keys = settingsData.apiKeys as APIKey[]
+    const index = keys.findIndex(k => k.id === id)
+    if (index !== -1) {
+      keys.splice(index, 1)
+      return true
+    }
+    return false
   },
 
   getFullKey: (prefix: string): string => {
@@ -40,10 +68,12 @@ export const settingsService = {
   },
 
   getStats: () => {
+    const members = settingsData.teamMembers as TeamMember[]
+    const keys = settingsData.apiKeys as APIKey[]
     return {
-      totalMembers: 0,
-      totalKeys: 0,
-      activeKeys: 0
+      totalMembers: members.length,
+      totalKeys: keys.length,
+      activeKeys: keys.length
     }
   }
 }
